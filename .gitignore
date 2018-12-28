@@ -1,0 +1,7 @@
+.vs/
+Valenzuela.RetryPolicy.Console/bin/
+Valenzuela.RetryPolicy.Console/obj/
+Valenzuela.RetryPolicy.Tests/bin/
+Valenzuela.RetryPolicy.Tests/obj/
+Valenzuela.RetryPolicy/obj/
+Valenzuela.RetryPolicy/bin/
