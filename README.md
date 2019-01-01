@@ -21,7 +21,7 @@ A Retry Policy is a general purpose utility class for dotnet core written in CSh
 Take a look at the included unit tests and **Console** application for an example usage. 
 
 1. Instantiate the **RetryPolicy** class with the desired configuration
-2. Call the **Execute** or **ExecuteAsync** methods with a Lambda expression you wish to run and retry in the event of a failure
+2. Call the **Execute** or **ExecuteAsync** methods with a delegate expression you wish to run and retry in the event of a failure
 
 ```csharp
 private static async Task Main(string[] args)
@@ -45,6 +45,32 @@ private static async Task Main(string[] args)
         }
         logger.LogInformation("Execution Async Complete");
         await Task.Yield();
+    });
+
+    //Execute async Example with delegate condition
+    executionAttemptCount = 0;
+    await retryPolicy.ExecuteAsync(async (token) =>
+    {
+        var randomNumber = random.Next(1, 3);
+        executionAttemptCount++;
+        logger.LogInformation("Executing Async with custom exit condition");
+        if (randomNumber % 2 == 1)
+        {
+            logger.LogInformation("Simulating Random Transient Exception");
+            throw new Exception("Random Transient Exception");
+        }
+        logger.LogInformation("Execution Async Complete with custom exit condition");
+        await Task.Yield();
+    }, async (token) =>
+    {
+        if (executionAttemptCount % 2 == 1)
+        {
+            return await Task.FromResult(false);
+        }
+        else
+        {
+            return await Task.FromResult(true);
+        }
     });
 }
 ```
