@@ -1,5 +1,5 @@
 # RetryPolicy
-A simple *Retry Policy* for dotnet core
+A simple *Retry Policy* for dotnet core. Additional documentation at https://www.codeproject.com/Articles/1273180/Retry-Policy
 
 
 ## Overview
