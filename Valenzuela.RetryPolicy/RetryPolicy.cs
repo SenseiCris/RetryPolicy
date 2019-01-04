@@ -49,7 +49,7 @@ namespace Valenzuela.RetryPolicy
         /// <param name="retryDelay">The amount of time to wait in milliseconds before executing another attempt.</param>
         public RetryPolicy(ILoggerFactory loggerFactory, int retryLimit = DEFAULT_RETRY_LIMIT, int retryDelay = DEFAULT_RETRY_DELAY)
         {
-            Logger = loggerFactory.CreateLogger(GetType());
+            Logger = loggerFactory?.CreateLogger(GetType());
             RetryLimit = retryLimit;
             RetryDelay = retryDelay;
         }
@@ -63,7 +63,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given function fails</exception>
         public async Task ExecuteAsync(Func<CancellationToken, Task> func, CancellationToken token = default)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}\"");
             await ExecuteAsync(func, 0, token);
         }
 
@@ -77,7 +77,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given function fails</exception>
         public async Task ExecuteAsync(Func<CancellationToken, Task> func, Func<CancellationToken, Task<bool>> exitCondition, CancellationToken token = default)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}\"");
             await ExecuteAsync(func, exitCondition, 0, token);
         }
 
@@ -88,7 +88,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given action fails</exception>
         public void Execute(Action action)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}\"");
             Execute(action, 0, null);
         }
 
@@ -100,7 +100,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given action fails</exception>
         public void Execute(Action action, Func<bool> exitCondition)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}\"");
             Execute(action, exitCondition, 0, null);
         }
 
@@ -115,7 +115,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given function fails</exception>
         private async Task ExecuteAsync(Func<CancellationToken, Task> func, int retryCount, CancellationToken token = default, Exception lastException = null)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_2\",  \"retryCount\": \"{retryCount}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_2\",  \"retryCount\": \"{retryCount}\"");
             var funcHandle = func;
             if (retryCount <= RetryLimit)
             {
@@ -128,7 +128,7 @@ namespace Valenzuela.RetryPolicy
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
+                    Logger?.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
                     retryCount++;
                     await Task.Delay(RetryDelay);
                     await ExecuteAsync(funcHandle, retryCount, token, ex);
@@ -136,10 +136,10 @@ namespace Valenzuela.RetryPolicy
             }
             else
             {
-                Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_2\",  \"retryCount\": \"{retryCount}\"");
+                Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_2\",  \"retryCount\": \"{retryCount}\"");
 
                 var retryPolicyException = new RetryPolicyException($"Attempted to re-execute { retryCount - 1 } times", func, lastException);
-                Logger.LogError(retryPolicyException, "Unable to execute function");
+                Logger?.LogError(retryPolicyException, "Unable to execute function");
                 throw retryPolicyException;
             }
         }
@@ -156,7 +156,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given function fails</exception>
         private async Task ExecuteAsync(Func<CancellationToken, Task> func, Func<CancellationToken, Task<bool>> exitCondition, int retryCount, CancellationToken token = default, Exception lastException = null)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\", \"retryCount\": \"{retryCount}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\", \"retryCount\": \"{retryCount}\"");
             var funcHandle = func;
             var exitConditionHandle = exitCondition;
 
@@ -170,14 +170,14 @@ namespace Valenzuela.RetryPolicy
 
                         if (await exitConditionHandle(token))
                         {
-                            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\", \"message\": \"Exit Condition met at Retry number {retryCount}\"");
+                            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\", \"message\": \"Exit Condition met at Retry number {retryCount}\"");
                             await Task.Yield();
                             return;
                         }
                         else
                         {
                             retryCount++;
-                            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\", \"message\": \"Exit Condition not met. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds\"");                            
+                            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\", \"message\": \"Exit Condition not met. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds\"");                            
                             await Task.Delay(RetryDelay);
                             await ExecuteAsync(funcHandle, exitConditionHandle, retryCount, token, lastException);
                         }
@@ -187,7 +187,7 @@ namespace Valenzuela.RetryPolicy
                 {
                     retryCount++;
 
-                    Logger.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
+                    Logger?.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
                     await Task.Delay(RetryDelay);
                     await ExecuteAsync(funcHandle, exitConditionHandle, retryCount, token, ex);
 
@@ -195,10 +195,10 @@ namespace Valenzuela.RetryPolicy
             }
             else
             {
-                Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\",  \"retryCount\": \"{retryCount}\"");
+                Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.ExecuteAsync)}_3\",  \"retryCount\": \"{retryCount}\"");
 
                 var retryPolicyException = new RetryPolicyException($"Attempted to re-execute { retryCount - 1 } times", func, lastException);
-                Logger.LogError(retryPolicyException, "Unable to execute function");
+                Logger?.LogError(retryPolicyException, "Unable to execute function");
                 throw retryPolicyException;
             }
         }
@@ -212,7 +212,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given action fails</exception>
         private void Execute(Action action, int retryCount, Exception lastException = null)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_2\",  \"retryCount\": \"{retryCount}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_2\",  \"retryCount\": \"{retryCount}\"");
             var actionHandle = action;
             if (retryCount <= RetryLimit && actionHandle != null)
             {
@@ -223,17 +223,17 @@ namespace Valenzuela.RetryPolicy
                 catch (Exception ex)
                 {
                     retryCount++;
-                    Logger.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
+                    Logger?.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
                     Thread.Sleep(RetryDelay);
                     Execute(actionHandle, retryCount, ex);
                 }
             }
             else
             {
-                Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_2\",  \"retryCount\": \"{retryCount}\"");
+                Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_2\",  \"retryCount\": \"{retryCount}\"");
 
                 var retryPolicyException = new RetryPolicyException($"Attempted to re-execute { retryCount - 1 } times", action, lastException);
-                Logger.LogError(retryPolicyException, "Unable to execute action");
+                Logger?.LogError(retryPolicyException, "Unable to execute action");
                 throw retryPolicyException;
             }
         }
@@ -248,7 +248,7 @@ namespace Valenzuela.RetryPolicy
         /// <exception cref="RetryPolicyException">Thrown when all attempts to execute the given action fails</exception>
         private void Execute(Action action, Func<bool> exitCondition, int retryCount, Exception lastException = null)
         {
-            Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\",  \"retryCount\": \"{retryCount}\"");
+            Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\",  \"retryCount\": \"{retryCount}\"");
             var actionHandle = action;
             var exitConditionHandle = exitCondition;
             if (retryCount <= RetryLimit && actionHandle != null && exitCondition != null)
@@ -258,13 +258,13 @@ namespace Valenzuela.RetryPolicy
                     actionHandle();
                     if (exitConditionHandle())
                     {
-                        Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\", \"message\": \"Exit Condition met at Retry number {retryCount}\"");
+                        Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\", \"message\": \"Exit Condition met at Retry number {retryCount}\"");
                         return;
                     }
                     else
                     {
                         retryCount++;
-                        Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\", \"message\": \"Exit Condition not met. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds\"");
+                        Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\", \"message\": \"Exit Condition not met. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds\"");
                         Thread.Sleep(RetryDelay);
                         Execute(actionHandle, exitConditionHandle, retryCount, lastException);
 
@@ -273,22 +273,19 @@ namespace Valenzuela.RetryPolicy
                 catch (Exception ex)
                 {
                     retryCount++;
-                    Logger.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
+                    Logger?.LogError(ex, $"Execution Failed. Retry number {retryCount}. Retry again in {RetryDelay} milliseconds");
                     Thread.Sleep(RetryDelay);
                     Execute(actionHandle, exitConditionHandle, retryCount, ex);
                 }
             }
             else
             {
-                Logger.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\",  \"retryCount\": \"{retryCount}\"");
+                Logger?.LogInformation($"\"Class\": \"{nameof(RetryPolicy)}\", \"Operation\" : \"{nameof(RetryPolicy.Execute)}_3\",  \"retryCount\": \"{retryCount}\"");
 
                 var retryPolicyException = new RetryPolicyException($"Attempted to re-execute { retryCount - 1 } times", action, lastException);
-                Logger.LogError(retryPolicyException, "Unable to execute action");
+                Logger?.LogError(retryPolicyException, "Unable to execute action");
                 throw retryPolicyException;
             }
         }
-
     }
-
-
 }
